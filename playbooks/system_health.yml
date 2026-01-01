@@ -1,0 +1,19 @@
+---
+- name: To check the system health status
+  hosts: all
+  become: true
+  tasks:
+  - name: To check the system uptime
+    ansible.builtin.shell: uptime
+    register: uptime_output
+  - name: To check the disk usage
+    ansible.builtin.shell: df -h
+    register: disk_output
+  - name: To Display output
+    ansible.builtin.debug:
+     msg:
+        - "======================uptime========================"
+        - "{{ uptime_output.stdout_lines }}"
+        - "======================Disk Usage==================="
+        - "{{ disk_output.stdout_lines }}"
+
