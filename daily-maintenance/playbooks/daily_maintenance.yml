@@ -1,0 +1,72 @@
+---
+- name: To perform daily manitenance of the systems
+  become: true
+  hosts: all
+  vars:
+   remote_script_dir: /home/ansadmin
+   local_output_dir: "{{ playbook_dir }}/../outputs"
+   local_log_file: "{{ local_output_dir }}/{{ inventory_hostname }}.log"
+  tasks:
+  - name: Ensure Script directory exists
+    ansible.builtin.file:
+     path: "{{ remote_script_dir }}"
+     state: directory
+     mode: '0755'
+
+  - name: Copy maintenance scripts
+    ansible.builtin.copy:
+     src: "../scripts/"
+     dest: "{{ remote_script_dir}}"
+     mode: '0755'
+
+  - name: Run cleanup script
+    ansible.builtin.shell: "{{ remote_script_dir }}/cleanup.sh"
+    register: cleanup_out
+
+
+  - name: Pause before next task
+    ansible.builtin.pause:
+     seconds: 5
+
+  - name: Run health check script
+    ansible.builtin.shell:  "{{ remote_script_dir }}/health_check.sh"
+    register: health_out
+
+  - name: Pause before next task
+    ansible.builtin.pause:
+     seconds: 5
+
+  - name: Run reboot script
+    ansible.builtin.shell: "{{ remote_script_dir }}/reboot_if_required.sh }}"
+    register: reboot_out
+
+  - name: Ensure outputs directory exists on controller
+    ansible.builtin.file:
+     path: "{{ local_output_dir }}"
+     state: directory
+     mode: '0755'
+    delegate_to: localhost
+    run_once: true
+    become: false
+  - name: Write all outputs to per-host log file in the controller
+    ansible.builtin.copy:
+     dest: "{{ local_log_file }}"
+     content: |
+       ================Host: {{ inventory_hostname }} ===========
+     
+       ================Cleanup output ============
+       
+       {{ cleanup_out.stdout }}
+     
+       ================Health check output======================
+       
+       {{ health_out.stdout }}
+     
+       ================Reboot Check Output======================
+       
+       {{ reboot_out.stdout }}
+       
+    delegate_to: localhost
+    become: false    
+
+

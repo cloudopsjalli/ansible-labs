@@ -1,3 +1,13 @@
+#Ansible runtime files
 *.log
 *.retry
-*.vault
+
+#output logs
+
+outputs/
+
+#SSH
+.ssh/
+
+# OS files
+.DS_Store
