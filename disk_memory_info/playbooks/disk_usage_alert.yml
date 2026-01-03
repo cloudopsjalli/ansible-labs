@@ -1,0 +1,57 @@
+---
+- name: To check the log management of the systems
+  become: true
+  hosts: all
+  gather_facts: false
+  vars:
+    script_src: "{{ playbook_dir }}/../scripts"
+    script_dst: "/home/ansadmin/scripts"
+    local_output: "{{ playbook_dir }}/../outputs"
+    local_log: "{{ local_output }}/disk_report_{{ inventory_hostname }}.log"
+
+  tasks:
+  - name: To check the existence of the scripts in the local folder
+    ansible.builtin.file:
+     path: "{{ script_src }}"
+     state: directory
+     mode: '0755'
+  - name: To check the existence of the remote folder
+    ansible.builtin.file:
+     path: "{{ script_dst }}"
+     state: directory
+     mode: '0755'
+  - name: To copy the scripts to the remote folder
+    ansible.builtin.copy:
+     src: "{{ script_src }}"
+     dest: "{{ script_dst }}"
+     mode: '0755'
+  - name: To execute the scripts in the remote folder
+    ansible.builtin.shell: "{{ script_dst }}/disk_alert.sh"
+    register: disk_alert_output
+  - name: To pause the execution 
+    ansible.builtin.pause:
+     seconds: 5
+
+  - name: To execute the scripts in the remote folder
+    ansible.builtin.shell: "{{ script_dst }}/ram_free.sh"
+    register: ram_free_output
+
+  - name: To ensure outputs folder exists in the local controller
+    ansible.builtin.file:
+     path: "{{ local_output }}"
+     state: directory
+     mode: '0755'
+    become: false
+    run_once: true
+    delegate_to: localhost 
+  - name: To save the outputs to the controller
+    ansible.builtin.copy:
+     dest: "{{ local_log }}"
+     content: |
+       ===========Host:  {{ inventory_hostname }} =================
+
+         == {{ disk_alert_output.stdout }}
+         == {{ ram_free_output.stdout }}
+    delegate_to: localhost
+    become: false
+    
