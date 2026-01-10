@@ -2,22 +2,20 @@
 
 This repository contains Ansible Playbooks for real-world DevOps automation.
 
-## Playbooks
+Navigate to individual folders to find the playbooks and the Readme
 
-## 1. System_health.yml
-- checks uptime
-- cheks disk usage
-
-## 2. Install_webserver.yml
-- installs apache
-- starts and enables service
 
 ## How to Run
 
 --- bash
 
-ansible-playbook -i inventory/hosts playbooks/system_health.yml 
+ansible-playbook -i inventory/hosts /xxx/playbooks/daily_maintenance.yml 
 =======
 # ansible-labs
 Ansible playbooks for automation, monitoring and DevOps use cases
 
+
+
+Kalyan Jalli
+Cloud & DevOps Engineer
+GitHub: https://github.com/cloudopsjalli

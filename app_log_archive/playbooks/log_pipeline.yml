@@ -1,0 +1,101 @@
+---
+- name: To push the app script,generate log and archive log
+  become: true
+  hosts: all
+
+  vars: 
+   app_dir: "/home/ansadmin/scripts"
+   log_dir: "/var/log/myapp"
+   remote_archive_dir: "/var/log/myapp/archive"
+   local_archive_dir: "{{ playbook_dir }}/../outputs/archives"
+   scripts_dir: "{{ playbook_dir }}/../scripts"
+  
+  tasks:
+   
+  - name: Create application directory also to check if the directory exists
+    ansible.builtin.file:
+     path: "{{ app_dir }}"
+     mode: '0755'
+     state: directory
+  - name: Create log directory and also to check if the log directory exists
+    ansible.builtin.file:
+     path: "{{ log_dir }}"
+     mode: '0755'
+     state: directory
+
+
+
+  - name: To copy the scripts to the remote directory
+    ansible.builtin.copy:
+     src: "{{ scripts_dir }}/mydummyapp.sh"
+     dest: "{{ app_dir }}"
+     mode: '0755'
+  - name: To copy the scripts to the remote directory
+    ansible.builtin.copy:
+     src: "{{ scripts_dir }}/log_cleanup.sh"
+     dest: "{{ app_dir }}"
+     mode: '0755'
+
+
+
+
+  - name: To start the dummy script 
+    ansible.builtin.shell: "nohup {{ app_dir }}/mydummyapp.sh >/dev/null 2>&1 &"
+    args: 
+     creates: "{{ log_dir }}/myapp.log" 
+  
+  - name: To copy the cleanup script to remote machines
+    ansible.builtin.shell: "{{ app_dir }}/log_cleanup.sh"
+   
+
+  - name: Ensure archive directory exists in the remote hosts
+    ansible.builtin.file:
+     path: "{{ remote_archive_dir }}"
+     state: directory
+     mode: '0755'
+
+  - name: Ensure archive directory exists in the local hosts
+    ansible.builtin.file:
+     path: "{{ local_archive_dir }}"
+     state: directory
+     mode: '0755'
+    become: false
+    run_once: true
+    delegate_to: localhost
+
+  - name: To find archives on remote
+    ansible.builtin.find:
+     paths: "{{ remote_archive_dir }}"
+     patterns: "*.tar.gz"
+    register: archive_files 
+
+  - name: Fetch archived log files to controller
+    ansible.builtin.fetch:
+     src: "{{ item.path }}"
+     dest: "{{ local_archive_dir }}/{{ inventory_hostname }}/"
+     flat: yes
+    loop: "{{ archive_files.files }}"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

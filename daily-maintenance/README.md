@@ -34,4 +34,10 @@ This project automates daily Linux maintenance tasks across multiple servers usi
 ```bash
 ansible-playbook -i daily-maintenance/playbooks/hosts daily-maintenance/playbooks/daily_maintenance.yml
 
+Author
+
+Kalyan Jalli
+Cloud & DevOps Engineer
+GitHub: https://github.com/cloudopsjalli
+
 
