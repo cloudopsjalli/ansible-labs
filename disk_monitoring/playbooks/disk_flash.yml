@@ -1,0 +1,57 @@
+---
+- name: to execute some sample scripts
+  hosts: all
+  become: true
+  vars:
+   local_location: "{{ playbook_dir}}/../scripts"
+   remote_location: "/home/ansadmin/scripts"
+   log_directory: "{{ playbook_dir }}/../outputs"
+   log_location: "{{ log_directory  }}/{{ inventory_hostname }}.log"
+  tasks:
+  - name: To check the availablility of the local directory
+    ansible.builtin.file:
+     path: "{{ local_location}}"
+     state: directory
+     mode: '0755'
+    delegate_to: localhost
+    become: false
+  - name: To check the availability of remote directory
+    ansible.builtin.file:
+     path: "{{ remote_location }}"
+     state: directory
+     mode: '0755'
+
+  - name: To copy the script to the remote directory
+    ansible.builtin.copy:
+     src: "{{ local_location }}/"
+     dest: "{{ remote_location }}/"
+     mode: '0755'
+
+  - name: To execute the disk_script in the remote directory
+    ansible.builtin.shell: "{{ remote_location }}/disk_check.sh"
+    register: disk_output
+
+
+  - name: To execute the ram_script in the remote directory
+    ansible.builtin.shell: "{{ remote_location }}/ram_free.sh"
+    register: ram_output
+
+  - name: To check if output folder exists in the local system
+    ansible.builtin.file:
+     path: "{{ log_directory }}"
+     state: directory
+     mode: '0755'
+    delegate_to: localhost
+    run_once: true
+    become: false
+  - name: to collect the output
+    ansible.builtin.copy:
+     dest: "{{ log_location }}"
+     content: |
+
+       ========check the disk usage===========
+       Host: {{ inventory_hostname }}========
+              {{  disk_output.stdout }}
+              {{  ram_output.stdout }}
+    delegate_to: localhost
+    become: false
